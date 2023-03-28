@@ -1,1 +1,2 @@
 # Investing-Telegram-Bot
+<em>The program allows you to create an investment portfolio with maximum profitability and minimum risks, analyze the dynamics of prices for ordinary shares in real time, and keep abreast of financial news.</em>
