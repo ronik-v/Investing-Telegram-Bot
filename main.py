@@ -1,90 +1,185 @@
-"""
-commands = ["/less", "/beta", "/incm", "/volt"] - Фильтры: без фильтра, бета, по доходности, по волатильности.
-"/stic" - График динамики цены тикера.
-"""
-# TODO Сделать кнопки и вывод графика японских свечей.
-from aiogram.dispatcher import Dispatcher
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import Dispatcher, FSMContext
+from aiogram.types import ReplyKeyboardMarkup
+from aiogram.dispatcher.filters import Text
+import aiogram.utils.markdown as md
 from aiogram.utils import executor
 from aiogram import Bot, types
 
 from PortfolioFilters import MakeBetaPositivePortfolio, IncomeTickerFilter, VolatilityTickerFilter
+from ShowTickerDynamics import TickerDynamics, JapaneseCandlesDynamics
 from PortfolioModels import MarkovModel
-from PriceСharts import TickerDynamics
 from TickerDataParser import DataParser
 
-from config import bot_token
+from available_messages import START_COMMAND, HELP_COMMAND, DESCRIPTION_COMMAND
+from forms import TickersListForms, TickerForm
 from datetime import datetime, timedelta
+from config import bot_token
+import logging
 
 today = datetime.now()
 end_date = today - timedelta(weeks=12)  # 3 months earlier
 date_start, date_end = end_date.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d')
 bot = Bot(token=bot_token)
-dp = Dispatcher(bot)
+dp = Dispatcher(bot, storage=MemoryStorage())
+logger = logging.getLogger(__name__)
+
 try:
-    from os import chdir
+    from os import chdir, getcwd
 
     chdir('Graphs')
+    print(f'main - {getcwd()}')
 except OSError:
     print("\033[31m {}".format("Failed to change directory to Graphs."))
     exit(1)
 
+keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+systems_buttons = ['Помощь', 'Описание бота']
+portfolios_buttons = ['Создать обычный портфель', 'Создать портфель с бета значением',
+                      'Создать портфель с максимальным доходом', 'Создать портфель с минимальной волатильностью', ]
+graphs_buttons = ['Создать график скользящих средних', 'Создать график японских свечей']
+keyboard.add(systems_buttons[0])
+keyboard.add(systems_buttons[1]).insert(portfolios_buttons[0]).insert(portfolios_buttons[1]).insert(
+    portfolios_buttons[2]).insert(portfolios_buttons[3])
+keyboard.add(*graphs_buttons)
+P_COMMAND = []
+P_COST = []
+G_COMMAND = []
+
 
 async def send(message: types.Message, structure: list):
     for mes in structure:
-        await bot.send_message(message.from_id, mes)
+        await bot.send_message(message.chat.id, md.text(mes))
 
 
-@dp.message_handler(commands=['help'])
-async def process_help_command(message: types.Message):
-    await message.reply("Привет!\n"
-                        "Данный бот помогает узнать оптимальную, на данный момент, структуру инвестиционного портфеля.\n"
-                        "Вы можете использовать специальные алгоритмы отбора активов: /beta, /incm, /volt "
-                        "(отбор по бета значению, отбор по доходности, отбор по волатильности).\n"
-                        "Если не желаете использовать алгоритмы пропишите /less.\n"
-                        "Также данный бот может вывести график цены актива и скользящих средних командой /stic.\n"
-                        "Примеры использования команд - (\n"
-                        "/less=SBER, GAZP, YNDX, ROSN, VTBR\n/beta=SBER, GAZP, YNDX, ROSN, VTBR\n"
-                        "/stic=SBER).")
+async def send_photo(message: types.Message, png_file):
+    with open(png_file, 'rb') as photo:
+        await bot.send_photo(message.chat.id, photo)
 
 
 @dp.message_handler(commands=['start'])
-async def process_start_command(message: types.Message):
-    await message.reply("Скажите, что вам необходимо узнать?")
+async def start_command(message: types.Message):
+    await bot.send_message(
+        reply_markup=keyboard,
+        chat_id=message.from_user.id,
+        text=START_COMMAND,
+        parse_mode='HTML'
+    )
 
 
-@dp.message_handler()
-async def bot_realise(message: types.Message):
-    tickers = None
+@dp.message_handler(lambda message: message.text == 'Помощь')
+async def help_command(message: types.Message):
+    await bot.send_message(
+        chat_id=message.from_user.id,
+        text=HELP_COMMAND,
+        parse_mode='HTML'
+    )
+
+
+@dp.message_handler(lambda message: message.text == 'Описание бота')
+async def description_command(message: types.Message):
+    await bot.send_message(
+        chat_id=message.from_user.id,
+        text=DESCRIPTION_COMMAND,
+        parse_mode='HTML'
+    )
+
+
+@dp.message_handler(lambda message: message.text == 'Создать обычный портфель'
+                    or message.text == 'Создать портфель с бета значением'
+                    or message.text == 'Создать портфель с максимальным доходом'
+                    or message.text == 'Создать портфель с минимальной волатильностью')
+async def create_portfolio_command(message: types.Message):
+    P_COMMAND.append(message.text)
+    await TickersListForms.portfolio_cost.set()
+    await message.answer('Введите стоймость вашего портфеля')
+
+
+@dp.message_handler(state='*', commands='cancel')
+@dp.message_handler(Text(equals='отмена', ignore_case=True), state='*')
+async def cancel_handler(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+    await state.finish()
+    await message.reply('ОК')
+
+
+@dp.message_handler(state=TickersListForms.portfolio_cost)
+async def portfolio_cost_handler(message: types.Message, state: FSMContext):
     try:
-        tickers = message.text[6:].split(",")
+        P_COST.append(float(message.text))
+        await TickersListForms.next()
+        await message.reply('Перечислите название тикеров через запятую')
+    except:
+        logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+        logging.info(f'cost {message.from_user.id}-{message.from_user.first_name}')
+        await state.finish()
+        await message.reply('Стоймость портфеля была введена не верно')
+
+
+@dp.message_handler(state=TickersListForms.tickers)
+async def portfolio_result(message: types.Message, state: FSMContext):
+    try:
+        tickers = message.text.split(',')
+        command = P_COMMAND[len(P_COMMAND) - 1]
+        cost = P_COST[len(P_COST) - 1]
         for position in range(len(tickers)):
-            ticker = tickers[position]
+            ticker = tickers[position].upper()
             if ticker[:1] == " ":
                 tickers[position] = ticker[1:]
-    except TypeError:
-        await bot.send_message(message.from_id, "Простите, но вы неправильно ввели список тикеров или тикер.")
-    match message.text[:5]:
-        case "/less":
-            markov_p = MarkovModel(DataParser(tickers, date_start, date_end).parse_tickers()).result()
+        if command == 'Создать обычный портфель':
+            markov_p = MarkovModel(DataParser(tickers, date_start, date_end).parse_tickers(), cost).result()
             await send(message, markov_p)
-        case "/beta":
+        if command == 'Создать портфель с бета значением':
             beta_tickers = MakeBetaPositivePortfolio(tickers, date_start, date_end).BetaPositivePortfolio(tickers,
                                                                                                           date_start,
                                                                                                           date_end)
-            markov_p_beta = MarkovModel(DataParser(beta_tickers, date_start, date_end).parse_tickers()).result()
+            markov_p_beta = MarkovModel(DataParser(beta_tickers, date_start, date_end).parse_tickers(), cost).result()
             await send(message, markov_p_beta)
-        case "/incm":
+        if command == 'Создать портфель с максимальным доходом':
             income_tickers = IncomeTickerFilter(tickers, date_start, date_end).income_filter()
-            markov_p_income = MarkovModel(DataParser(income_tickers, date_start, date_end).parse_tickers()).result()
+            markov_p_income = MarkovModel(DataParser(income_tickers, date_start, date_end).parse_tickers(),
+                                          cost).result()
             await send(message, markov_p_income)
-        case "/volt":
+        if command == 'Создать портфель с минимальной волатильностью':
             volatility_tickers = VolatilityTickerFilter(tickers, date_start, date_end).filter()
-            markov_p_volatility = MarkovModel(
-                DataParser(volatility_tickers, date_start, date_end).parse_tickers()).result()
+            markov_p_volatility = MarkovModel(DataParser(volatility_tickers, date_start, date_end).parse_tickers(),
+                                              cost).result()
             await send(message, markov_p_volatility)
-        case "/stic":
-            png = open(TickerDynamics(tickers[0], date_start, date_end, message.from_id).dynamics_graph(), "rb")
-            await bot.send_photo(message.from_id, png)
+    except:
+        logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+        logging.info(f'portfolio {message.from_user.id}-{message.from_user.first_name}')
+        await state.finish()
+    finally:
+        await state.finish()
+
+
+@dp.message_handler(lambda message: message.text == 'Создать график скользящих средних'
+                                    or message.text == 'Создать график японских свечей')
+async def create_graph_command(message: types.Message):
+    G_COMMAND.append(message.text)
+    await TickerForm.ticker.set()
+    await message.answer('Напишите название тикера')
+
+
+@dp.message_handler(state=TickerForm)
+async def graph_result(message: types.Message, state: FSMContext):
+    try:
+        ticker = message.text.upper()
+        command = G_COMMAND[len(G_COMMAND) - 1]
+        if command == 'Создать график скользящих средних':
+            file = TickerDynamics(ticker, date_start, date_end, message.from_id).dynamics_graph()
+            await send_photo(message, file)
+        if command == 'Создать график японских свечей':
+            file = JapaneseCandlesDynamics(ticker, date_start, date_end, message.from_id).candles_graph()
+            await send_photo(message, file)
+    except:
+        logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+        logging.info(f'graph {message.from_user.id}-{message.from_user.first_name}')
+        await state.finish()
+    finally:
+        await state.finish()
 
 
 if __name__ == '__main__':
