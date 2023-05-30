@@ -118,6 +118,11 @@ async def portfolio_cost_handler(message: types.Message, state: FSMContext):
         await message.reply('Стоймость портфеля была введена не верно')
 
 
+"""
+Creation of investment portfolios according to certain models - "filters" of ordinary shares
+"Filters" of ordinary shares see in PortfolioFilters.py
+"""
+
 @dp.message_handler(state=TickersListForms.tickers)
 async def portfolio_result(message: types.Message, state: FSMContext):
     try:
@@ -147,8 +152,9 @@ async def portfolio_result(message: types.Message, state: FSMContext):
             markov_p_volatility = MarkovModel(DataParser(volatility_tickers, date_start, date_end).parse_tickers(),
                                               cost).result()
             await send_text(message, markov_p_volatility)
-        del P_COMMAND[:]
-        del P_COST[:]
+        if len(P_COMMAND) > 2000 and len(P_COST) > 2000:
+            del P_COMMAND[:]
+            del P_COST[:]
     except:
         logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
         logging.info(f'portfolio {message.from_user.id}-{message.from_user.first_name}')
@@ -164,6 +170,11 @@ async def create_graph_command(message: types.Message):
     await TickerForm.ticker.set()
     await message.answer('Напишите название тикера')
 
+"""
+Analysis of the dynamics at the moment consists of two types of graphs:
+1. Moving averages based on which you can determine the current trend in the development of the price of an asset;
+2. Japanese candlesticks based on which you can determine the pattern of behavior of short-term dynamics.
+"""
 
 @dp.message_handler(state=TickerForm)
 async def graph_result(message: types.Message, state: FSMContext):
@@ -176,7 +187,8 @@ async def graph_result(message: types.Message, state: FSMContext):
         if command == 'Создать график японских свечей':
             file = JapaneseCandlesDynamics(ticker, date_start, date_end, message.from_id).candles_graph()
             await send_photo(message, file)
-        del G_COMMAND[:]
+        if len(G_COMMAND) > 2000:
+            del G_COMMAND[:]
     except:
         logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
         logging.info(f'graph {message.from_user.id}-{message.from_user.first_name}')
@@ -185,8 +197,15 @@ async def graph_result(message: types.Message, state: FSMContext):
         await state.finish()
 
 
-if __name__ == '__main__':
+def main() -> None:
     try:
         executor.start_polling(dp, skip_updates=True)
     except OSError as Error:
         print(Error)
+        exit(1)
+    finally:
+        print('Bot dropped.')
+
+
+if __name__ == '__main__':
+    main()
