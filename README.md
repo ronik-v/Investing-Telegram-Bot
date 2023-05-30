@@ -7,3 +7,13 @@
     <li>Create an individual investment portfolio according to the given cost parameters;</li>
     <li>Make an optimal choice of assets based on the required ratio of profitability/risk.</li>
 </ul>
+
+<div>
+<h3>Details:</h3>
+<ul>
+    <li>As a model for determining the structure of the investment portfolio, the model of G. Markowitz was chosen, according to which the portfolio with the minimum risk, the maximum Sharpe ratio and the average portfolio is determined.</li>
+    <li>As information visualization are used:<br>
+        1. Moving averages;
+        2. Japanese candles.</li>
+</ul>
+</div>
