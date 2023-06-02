@@ -34,9 +34,14 @@ except OSError:
     exit(1)
 
 BLOCKED_ID = []
-P_COMMAND = []
-P_COST = []
-G_COMMAND = []
+P_COMMAND = {}
+P_COST = {}
+G_COMMAND = {}
+
+#   Delete data from dict
+def delete_dict(_dict: dict) -> None:
+    for key in list(_dict.keys()):
+        del _dict[key]
 
 
 #   Data sending functions
@@ -108,7 +113,7 @@ async def description_command(message: types.Message):
     'Создать обычный портфель', 'Создать портфель с бета значением',
     'Создать портфель с максимальным доходом', 'Создать портфель с минимальной волатильностью'])
 async def create_portfolio_command(message: types.Message):
-    P_COMMAND.append(message.text)
+    P_COMMAND[message.from_user.id] = message.text
     await TickersListForms.portfolio_cost.set()
     await message.answer('Введите стоймость вашего портфеля')
 
@@ -126,7 +131,7 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 @dp.message_handler(state=TickersListForms.portfolio_cost)
 async def portfolio_cost_handler(message: types.Message, state: FSMContext):
     try:
-        P_COST.append(float(message.text))
+        P_COST[message.from_user.id] = float(message.text)
         await TickersListForms.next()
         await message.reply('Перечислите название тикеров через запятую')
     except:
@@ -140,8 +145,8 @@ async def portfolio_cost_handler(message: types.Message, state: FSMContext):
 async def portfolio_result(message: types.Message, state: FSMContext):
     try:
         tickers = message.text.split(',')
-        command = P_COMMAND[len(P_COMMAND) - 1]
-        cost = P_COST[len(P_COST) - 1]
+        command = P_COMMAND[message.from_user.id]
+        cost = P_COST[message.from_user.id]
         for position in range(len(tickers)):
             ticker = tickers[position].upper()
             if ticker[:1] == " ":
@@ -166,8 +171,8 @@ async def portfolio_result(message: types.Message, state: FSMContext):
                                               cost).result()
             await send_text(message, markov_p_volatility)
         if len(P_COMMAND) > 2000 and len(P_COST) > 2000:
-            del P_COMMAND[:]
-            del P_COST[:]
+            delete_dict(P_COMMAND)
+            delete_dict(P_COST)
     except:
         logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
         logging.info(f'portfolio {message.from_user.id}-{message.from_user.first_name}')
@@ -179,7 +184,7 @@ async def portfolio_result(message: types.Message, state: FSMContext):
 @dp.message_handler(lambda message: message.text in ['Создать график скользящих средних',
                                                      'Создать график японских свечей'])
 async def create_graph_command(message: types.Message):
-    G_COMMAND.append(message.text)
+    G_COMMAND[message.from_user.id] = message.text
     await TickerForm.ticker.set()
     await message.answer('Напишите название тикера')
 
@@ -188,7 +193,7 @@ async def create_graph_command(message: types.Message):
 async def graph_result(message: types.Message, state: FSMContext):
     try:
         ticker = message.text.upper()
-        command = G_COMMAND[len(G_COMMAND) - 1]
+        command = G_COMMAND[message.from_user.id]
         if command == 'Создать график скользящих средних':
             file = TickerDynamics(ticker, date_start, date_end, message.from_id).dynamics_graph()
             await send_photo(message, file)
@@ -196,7 +201,7 @@ async def graph_result(message: types.Message, state: FSMContext):
             file = JapaneseCandlesDynamics(ticker, date_start, date_end, message.from_id).candles_graph()
             await send_photo(message, file)
         if len(G_COMMAND) > 2000:
-            del G_COMMAND[:]
+            delete_dict(G_COMMAND)
     except:
         logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
         logging.info(f'graph {message.from_user.id}-{message.from_user.first_name}')
