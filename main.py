@@ -33,6 +33,7 @@ except OSError:
     print("\033[31m {}".format("Failed to change directory to Graphs."))
     exit(1)
 
+BLOCKED_ID = []
 P_COMMAND = []
 P_COST = []
 G_COMMAND = []
@@ -49,23 +50,40 @@ async def send_photo(message: types.Message, png_file):
         await bot.send_photo(message.chat.id, photo)
 
 
+#   Bot verification
+"""
+The function must be synchronous since processing in the event loop does not always have time
+"""
+def bot_blocker(message: types.Message):
+    if "bot" in message.from_user.username.lower():
+        BLOCKED_ID.append(message.from_user.id)
+        logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+        logging.warning(f'BOT! -> {message.from_user.id}-{message.from_user.username}')
+
+
+
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    systems_buttons = ['Помощь', 'Описание бота']
-    portfolios_buttons = ['Создать обычный портфель', 'Создать портфель с бета значением',
-                          'Создать портфель с максимальным доходом', 'Создать портфель с минимальной волатильностью', ]
-    graphs_buttons = ['Создать график скользящих средних', 'Создать график японских свечей']
-    keyboard.add(systems_buttons[0])
-    keyboard.add(systems_buttons[1]).insert(portfolios_buttons[0]).insert(portfolios_buttons[1]).insert(
-        portfolios_buttons[2]).insert(portfolios_buttons[3])
-    keyboard.add(*graphs_buttons)
-    await bot.send_message(
-        reply_markup=keyboard,
-        chat_id=message.from_user.id,
-        text=START_COMMAND,
-        parse_mode='HTML'
-    )
+    bot_blocker(message)
+    if message.from_user.id in BLOCKED_ID:
+        pass
+    else:
+        keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+        systems_buttons = ['Помощь', 'Описание бота']
+        portfolios_buttons = ['Создать обычный портфель', 'Создать портфель с бета значением',
+                              'Создать портфель с максимальным доходом',
+                              'Создать портфель с минимальной волатильностью', ]
+        graphs_buttons = ['Создать график скользящих средних', 'Создать график японских свечей']
+        keyboard.add(systems_buttons[0])
+        keyboard.add(systems_buttons[1]).insert(portfolios_buttons[0]).insert(portfolios_buttons[1]).insert(
+            portfolios_buttons[2]).insert(portfolios_buttons[3])
+        keyboard.add(*graphs_buttons)
+        await bot.send_message(
+            reply_markup=keyboard,
+            chat_id=message.from_user.id,
+            text=START_COMMAND,
+            parse_mode='HTML'
+        )
 
 
 @dp.message_handler(lambda message: message.text == 'Помощь')
@@ -118,11 +136,6 @@ async def portfolio_cost_handler(message: types.Message, state: FSMContext):
         await message.reply('Стоймость портфеля была введена не верно')
 
 
-"""
-Creation of investment portfolios according to certain models - "filters" of ordinary shares
-"Filters" of ordinary shares see in PortfolioFilters.py
-"""
-
 @dp.message_handler(state=TickersListForms.tickers)
 async def portfolio_result(message: types.Message, state: FSMContext):
     try:
@@ -170,11 +183,6 @@ async def create_graph_command(message: types.Message):
     await TickerForm.ticker.set()
     await message.answer('Напишите название тикера')
 
-"""
-Analysis of the dynamics at the moment consists of two types of graphs:
-1. Moving averages based on which you can determine the current trend in the development of the price of an asset;
-2. Japanese candlesticks based on which you can determine the pattern of behavior of short-term dynamics.
-"""
 
 @dp.message_handler(state=TickerForm)
 async def graph_result(message: types.Message, state: FSMContext):
