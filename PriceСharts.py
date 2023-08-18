@@ -1,19 +1,34 @@
-import pandas_datareader as pdr
 import matplotlib.pyplot as plt
+from abc import ABC, abstractmethod
+from TickerDataParser import DataParser
 
 
-class TickerDynamics:
+#   Base model for creating graphs
+class Graph(ABC):
+    @abstractmethod
     def __init__(self, ticker, date_start, date_end, user_id):
         self.ticker = ticker
         self.date_start = date_start
         self.date_end = date_end
         self.user_id = user_id
-        self.df = pdr.data.DataReader(ticker, 'moex', date_start, date_end)
+
+    @abstractmethod
+    def png_file_path(self) -> str:
+        pass
+
+
+class TickerDynamics(Graph, ABC):
+    def __init__(self, ticker, date_start, date_end, user_id):
+        self.ticker = ticker
+        self.date_start = date_start
+        self.date_end = date_end
+        self.user_id = user_id
+        self.df = DataParser.get_base_df(self.ticker, self.date_start, self.date_end)
         self.df['SMA5'] = self.df['CLOSE'].rolling(5).mean()
         self.df['SMA12'] = self.df['CLOSE'].rolling(12).mean()
         self.df['EWMA'] = self.df['CLOSE'].ewm(com=5).mean()
 
-    def dynamics_graph(self) -> str:
+    def png_file_path(self) -> str:
         fig = plt.figure(figsize=(10, 8))
         plt.plot(self.df['CLOSE'], label=f'Close price {self.ticker}')
         plt.plot(self.df['SMA5'], label='SMA(5)')
@@ -28,15 +43,15 @@ class TickerDynamics:
         return f"{self.user_id}_ma.png"
 
 
-class JapaneseCandlesDynamics:
+class JapaneseCandlesDynamics(Graph, ABC):
     def __init__(self, ticker, date_start, date_end, user_id):
         self.ticker = ticker
         self.date_start = date_start
         self.date_end = date_end
         self.user_id = user_id
-        self.prices = pdr.data.DataReader(ticker, 'moex', date_start, date_end)
+        self.prices = DataParser.get_base_df(self.ticker, self.date_start, self.date_end)
 
-    def candles_graph(self):
+    def png_file_path(self):
         fig = plt.figure(figsize=(10, 8))
         width = .8
         width2 = .09
