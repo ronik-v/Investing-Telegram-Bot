@@ -9,6 +9,11 @@
 </ul>
 
 <div>
+    <p>Start command:</p><br>
+    <img src="images/start.png"/><br>
+</div>
+
+<div>
 <h3>Details:</h3>
 <ul>
     <li>As a model for determining the structure of the investment portfolio, the model of G. Markowitz was chosen, according to which the portfolio with the minimum risk, the maximum Sharpe ratio and the average portfolio is determined.</li>
@@ -24,5 +29,14 @@
     <ul>
         <li>Create dir: Windows\Linux: <em>mkdir \Investing-Telegram-Bot\Graphs</li>
         <li>Install libs: aiogram, matplotlib, numpy, pandas_datareader</li>
+        <li>Add your token in config.py</li>
     </ul>
+</div>
+
+<div>
+    <h3>Examples</h3>
+    <p>1. Creation of an investment portfolio: </p><br>
+    <img src="images/portfolio.png"/><br>
+    <p>2. Creating a graph: </p>
+    <img src="images/graph.png"/>
 </div>
