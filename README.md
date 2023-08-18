@@ -18,3 +18,11 @@
     <li>Handled the situation with the attack of spam bots.</li>
 </ul>
 </div>
+
+<div>
+    <h3>Required to run bot</h3>
+    <ul>
+        <li>Create dir: Windows\Linux: <em>mkdir \Investing-Telegram-Bot\Graphs</li>
+        <li>Install libs: aiogram, matplotlib, numpy, pandas_datareader</li>
+    </ul>
+</div>
