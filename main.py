@@ -5,7 +5,7 @@ from aiogram.utils import executor
 from aiogram import Bot, types
 import aiogram.utils.markdown as md
 
-from PortfolioFilters import MakeBetaPositivePortfolio, IncomeTickerFilter, VolatilityTickerFilter
+from PortfolioFilters import BetaPositivePortfolioFilter, IncomeTickerFilter, VolatilityTickerFilter
 from PriceСharts import TickerDynamics, JapaneseCandlesDynamics
 from PortfolioModels import MarkovModel
 from TickerDataParser import DataParser
@@ -38,6 +38,7 @@ P_COMMAND = {}
 P_COST = {}
 G_COMMAND = {}
 
+
 #   Delete data from dict
 def delete_dict(_dict: dict) -> None:
 	for key in list(_dict.keys()):
@@ -59,6 +60,8 @@ async def send_photo(message: types.Message, png_file):
 """
 The function must be synchronous since processing in the event loop does not always have time
 """
+
+
 def bot_blocker(message: types.Message):
 	if "bot" in message.from_user.username.lower():
 		BLOCKED_ID.append(message.from_user.id)
@@ -151,20 +154,16 @@ async def portfolio_result(message: types.Message, state: FSMContext):
 			markov_p = MarkovModel(DataParser(tickers, date_start, date_end).parse_tickers(), cost).result()
 			await send_text(message, markov_p)
 		if command == 'Создать портфель с бета значением':
-			beta_tickers = MakeBetaPositivePortfolio(tickers, date_start, date_end).BetaPositivePortfolio(tickers,
-																										  date_start,
-																										  date_end)
+			beta_tickers = BetaPositivePortfolioFilter(tickers, date_start, date_end).filter()
 			markov_p_beta = MarkovModel(DataParser(beta_tickers, date_start, date_end).parse_tickers(), cost).result()
 			await send_text(message, markov_p_beta)
 		if command == 'Создать портфель с максимальным доходом':
-			income_tickers = IncomeTickerFilter(tickers, date_start, date_end).income_filter()
-			markov_p_income = MarkovModel(DataParser(income_tickers, date_start, date_end).parse_tickers(),
-										  cost).result()
+			income_tickers = IncomeTickerFilter(tickers, date_start, date_end).filter()
+			markov_p_income = MarkovModel(DataParser(income_tickers, date_start, date_end).parse_tickers(), cost).result()
 			await send_text(message, markov_p_income)
 		if command == 'Создать портфель с минимальной волатильностью':
 			volatility_tickers = VolatilityTickerFilter(tickers, date_start, date_end).filter()
-			markov_p_volatility = MarkovModel(DataParser(volatility_tickers, date_start, date_end).parse_tickers(),
-											  cost).result()
+			markov_p_volatility = MarkovModel(DataParser(volatility_tickers, date_start, date_end).parse_tickers(), cost).result()
 			await send_text(message, markov_p_volatility)
 		if len(P_COMMAND) > 2000 and len(P_COST) > 2000:
 			delete_dict(P_COMMAND)
@@ -204,10 +203,10 @@ async def graph_result(message: types.Message, state: FSMContext):
 		ticker = message.text.upper()
 		command = G_COMMAND[message.from_user.id]
 		if command == 'Создать график скользящих средних':
-			file = TickerDynamics(ticker, date_start, date_end, message.from_id).dynamics_graph()
+			file = TickerDynamics(ticker, date_start, date_end, message.from_id).png_file_path()
 			await send_photo(message, file)
 		if command == 'Создать график японских свечей':
-			file = JapaneseCandlesDynamics(ticker, date_start, date_end, message.from_id).candles_graph()
+			file = JapaneseCandlesDynamics(ticker, date_start, date_end, message.from_id).png_file_path()
 			await send_photo(message, file)
 		if len(G_COMMAND) > 2000:
 			delete_dict(G_COMMAND)
