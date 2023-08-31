@@ -27,9 +27,9 @@
 <div>
     <h3>Required to run bot</h3>
     <ul>
-        <li>Create dir: Windows\Linux: <em>mkdir \Investing-Telegram-Bot\Graphs</li>
+        <li>Create dir: Windows\Linux: <em>mkdir \Investing-Telegram-Bot\Graphs</em></li>
         <li>Install libs: aiogram, matplotlib, numpy, pandas_datareader</li>
-        <li>Add your token in config.py</li>
+        <li>Add your token in <b>config.py</b></li>
     </ul>
 </div>
 
