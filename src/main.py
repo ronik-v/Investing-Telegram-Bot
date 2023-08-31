@@ -11,15 +11,13 @@ from PortfolioModels import MarkovModel
 from TickerDataParser import DataParser
 from Keyboards import Keyboard, portfolio_buttons, graph_buttons
 
-from available_messages import START_COMMAND, HELP_COMMAND, DESCRIPTION_COMMAND
+from BotForCreatingInvestmentPortfolios.src.available_messages import START_COMMAND, HELP_COMMAND, DESCRIPTION_COMMAND
 from forms import TickersListForms, TickerForm
 from datetime import datetime, timedelta
 from config import bot_token
 import logging
 
-today = datetime.now()
-end_date = today - timedelta(weeks=10)  # ~3 months earlier
-date_start, date_end = end_date.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d')
+
 bot = Bot(token=bot_token)
 dp = Dispatcher(bot, storage=MemoryStorage())
 logger = logging.getLogger(__name__)
@@ -27,7 +25,7 @@ logger = logging.getLogger(__name__)
 try:
 	from os import chdir, getcwd
 
-	chdir('Graphs')
+	chdir('../Graphs')
 	print(f'main - {getcwd()}')
 except OSError:
 	print("\033[31m {}".format("Failed to change directory to Graphs."))
@@ -39,6 +37,13 @@ P_COST = {}
 G_COMMAND = {}
 
 
+# Dates for parser
+def current_dates() -> tuple[datetime, datetime]:
+	today = datetime.now()
+	end_date = today - timedelta(weeks=10)  # ~3 months earlier
+	return today, end_date
+
+
 #   Delete data from dict
 def delete_dict(_dict: dict) -> None:
 	for key in list(_dict.keys()):
@@ -46,12 +51,12 @@ def delete_dict(_dict: dict) -> None:
 
 
 #   Data sending functions
-async def send_text(message: types.Message, structure: list):
+async def send_text(message: types.Message, structure: list) -> None:
 	for mes in structure:
 		await bot.send_message(message.chat.id, md.text(mes))
 
 
-async def send_photo(message: types.Message, png_file):
+async def send_photo(message: types.Message, png_file) -> None:
 	with open(png_file, 'rb') as photo:
 		await bot.send_photo(message.chat.id, photo)
 
@@ -62,7 +67,7 @@ The function must be synchronous since processing in the event loop does not alw
 """
 
 
-def bot_blocker(message: types.Message):
+def bot_blocker(message: types.Message) -> None:
 	if "bot" in message.from_user.username.lower():
 		BLOCKED_ID.append(message.from_user.id)
 		logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
@@ -135,13 +140,15 @@ async def portfolio_cost_handler(message: types.Message, state: FSMContext):
 		await message.reply('Перечислите название тикеров через запятую')
 	except:
 		logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
-		logging.info(f'cost {message.from_user.id}-{message.from_user.first_name}')
+		logging.error(f'cost {message.from_user.id}-{message.from_user.first_name}')
 		await state.finish()
 		await message.reply('Стоймость портфеля была введена не верно')
 
 
 @dp.message_handler(state=TickersListForms.tickers)
 async def portfolio_result(message: types.Message, state: FSMContext):
+	today, end_date = current_dates()
+	date_start, date_end = end_date.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d')
 	try:
 		tickers = message.text.split(',')
 		command = P_COMMAND[message.from_user.id]
@@ -170,7 +177,7 @@ async def portfolio_result(message: types.Message, state: FSMContext):
 			delete_dict(P_COST)
 	except:
 		logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
-		logging.info(f'portfolio {message.from_user.id}-{message.from_user.first_name}')
+		logging.error(f'portfolio {message.from_user.id}-{message.from_user.first_name}')
 		await state.finish()
 	finally:
 		await state.finish()
@@ -199,6 +206,8 @@ async def create_graph_command(message: types.Message):
 
 @dp.message_handler(state=TickerForm)
 async def graph_result(message: types.Message, state: FSMContext):
+	today, end_date = current_dates()
+	date_start, date_end = end_date.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d')
 	try:
 		ticker = message.text.upper()
 		command = G_COMMAND[message.from_user.id]
@@ -212,7 +221,7 @@ async def graph_result(message: types.Message, state: FSMContext):
 			delete_dict(G_COMMAND)
 	except:
 		logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
-		logging.info(f'graph {message.from_user.id}-{message.from_user.first_name}')
+		logging.error(f'graph {message.from_user.id}-{message.from_user.first_name}')
 		await state.finish()
 	finally:
 		await state.finish()
@@ -226,8 +235,8 @@ async def graph_result(message: types.Message, state: FSMContext):
 def main() -> None:
 	try:
 		executor.start_polling(dp, skip_updates=True)
-	except OSError as Error:
-		print(Error)
+	except OSError as err:
+		logging.error(err)
 		exit(1)
 	finally:
 		print('Bot dropped.')
