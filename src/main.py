@@ -11,7 +11,7 @@ from PortfolioModels import MarkovModel
 from TickerDataParser import DataParser
 from Keyboards import Keyboard, portfolio_buttons, graph_buttons
 
-from BotForCreatingInvestmentPortfolios.src.available_messages import START_COMMAND, HELP_COMMAND, DESCRIPTION_COMMAND
+from available_messages import START_COMMAND, HELP_COMMAND, DESCRIPTION_COMMAND
 from forms import TickersListForms, TickerForm
 from datetime import datetime, timedelta
 from config import bot_token
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 try:
 	from os import chdir, getcwd
 
-	chdir('../Graphs')
+	chdir('Graphs')
 	print(f'main - {getcwd()}')
 except OSError:
 	print("\033[31m {}".format("Failed to change directory to Graphs."))
