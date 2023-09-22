@@ -13,6 +13,10 @@
                 <pre>python3 .\setup.py install</pre>
             </li>
             <li>
+                <h3>Libraries to install</h3>
+                <pre>pip install -r requirements.txt</pre>
+            </li>
+            <li>
                 <h3>Run the bot</h3>
                 <pre>python3 .\src\main.py</pre>
             </li>
