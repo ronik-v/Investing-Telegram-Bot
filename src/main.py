@@ -17,9 +17,17 @@ from datetime import datetime, timedelta
 from config import bot_token
 import logging
 
+from redis import StrictRedis
+
 
 bot = Bot(token=bot_token)
 dp = Dispatcher(bot, storage=MemoryStorage())
+_redis = StrictRedis(
+	host='127.0.0.1',
+	port=6379,
+	charset='utf-8',
+	decode_responses=True
+)
 logger = logging.getLogger(__name__)
 
 try:
@@ -28,10 +36,9 @@ try:
 	chdir('Graphs')
 	print(f'main - {getcwd()}')
 except OSError:
-	print("\033[31m {}".format("Failed to change directory to Graphs."))
+	print('\033[31m {}'.format('Failed to change directory to Graphs.'))
 	exit(1)
 
-BLOCKED_ID = []
 P_COMMAND = {}
 P_COST = {}
 G_COMMAND = {}
@@ -68,16 +75,25 @@ The function must be synchronous since processing in the event loop does not alw
 
 
 def bot_blocker(message: types.Message) -> None:
-	if "bot" in message.from_user.username.lower():
-		BLOCKED_ID.append(message.from_user.id)
+	if 'bot' in message.from_user.username.lower():
+		log_message_bot = f'BOT! -> {message.from_user.id}-{message.from_user.username}'
+		# Will hold id for up to an hour
+		_redis.set(message.from_user.id, log_message_bot, 3600)
 		logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
-		logging.warning(f'BOT! -> {message.from_user.id}-{message.from_user.username}')
+		logging.warning(log_message_bot)
+	else:
+		"""
+		User activity information
+		"""
+		log_message_user = f'USER -> {message.from_user.id}-{message.from_user.username}'
+		logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+		logging.info(log_message_user)
 
 
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
 	bot_blocker(message)
-	if message.from_user.id in BLOCKED_ID:
+	if _redis.exists(message.from_user.id):
 		pass
 	else:
 		await bot.send_message(
@@ -140,7 +156,7 @@ async def portfolio_cost_handler(message: types.Message, state: FSMContext):
 		await message.reply('Перечислите название тикеров через запятую')
 	except:
 		logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
-		logging.error(f'cost {message.from_user.id}-{message.from_user.first_name}')
+		logging.error(f'cost {message.from_user.id}-{message.from_user.first_name} => MESSAGE {message.text}')
 		await state.finish()
 		await message.reply('Стоймость портфеля была введена не верно')
 
@@ -155,7 +171,7 @@ async def portfolio_result(message: types.Message, state: FSMContext):
 		cost = P_COST[message.from_user.id]
 		for position in range(len(tickers)):
 			ticker = tickers[position].upper()
-			if ticker[:1] == " ":
+			if ticker[:1] == ' ':
 				tickers[position] = ticker[1:]
 		if command == 'Создать обычный портфель':
 			markov_p = MarkovModel(DataParser(tickers, date_start, date_end).parse_tickers(), cost).result()
@@ -177,8 +193,7 @@ async def portfolio_result(message: types.Message, state: FSMContext):
 			delete_dict(P_COST)
 	except:
 		logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
-		logging.error(f'portfolio {message.from_user.id}-{message.from_user.first_name}')
-		await state.finish()
+		logging.error(f'portfolio {message.from_user.id}-{message.from_user.first_name} => MESSAGE {message.text}')
 	finally:
 		await state.finish()
 		await bot.send_message(
@@ -221,8 +236,7 @@ async def graph_result(message: types.Message, state: FSMContext):
 			delete_dict(G_COMMAND)
 	except:
 		logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
-		logging.error(f'graph {message.from_user.id}-{message.from_user.first_name}')
-		await state.finish()
+		logging.error(f'graph {message.from_user.id}-{message.from_user.first_name} => MESSAGE {message.text}')
 	finally:
 		await state.finish()
 		await bot.send_message(
