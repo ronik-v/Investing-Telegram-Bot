@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 try:
 	from os import chdir, getcwd
 
-	chdir('Graphs')
+	chdir('src/Graphs')
 	print(f'main - {getcwd()}')
 except OSError:
 	print('\033[31m {}'.format('Failed to change directory to Graphs.'))
