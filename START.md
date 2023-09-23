@@ -20,6 +20,10 @@
                 <h3>Use dockerfile</h3>
                 <pre>docker build -t docker-whale .</pre>
             </li>
+            <li>
+                <h3>Redis</h3>
+                <p>If you want to change the Redis IP address and port, don't forget to change the connection in src/main.py</p>
+            </li>
         </div>
     </ul>
 </div>
