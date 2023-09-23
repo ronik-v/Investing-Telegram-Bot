@@ -1,4 +1,5 @@
 # Investing-Telegram-Bot
+<div class="wrapper">
 <em>The program allows you to create an investment portfolio with maximum profitability and minimum risks, analyze the dynamics of prices for ordinary shares in real time, and keep abreast of financial news.</em><br>
 
 <h3>What can this bot do?</h3>
@@ -40,4 +41,10 @@
     <img src="images/portfolio.png"/><br>
     <p>2. Creating a graph: </p>
     <img src="images/graph.png"/>
+</div>
+
+<div>
+	<h3>License</h3>
+	<p>Apache License 2.0, details here <a href="LICENSE">LICENSE</a></p>
+</div>
 </div>
