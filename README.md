@@ -39,8 +39,10 @@
     <h3>Examples</h3>
     <p>1. Creation of an investment portfolio: </p><br>
     <img src="images/portfolio.png"/><br>
-    <p>2. Creating a graph: </p>
-    <img src="images/graph.png"/>
+    <p>2. Creating a graph(Japanese candles): </p>
+    <img src="images/graph.png"/><br>
+    <p>2. Creating a graph(Moving averages): </p>
+    <img src="images/graph_sma.png"/><br>
 </div>
 
 <div>
