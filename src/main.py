@@ -8,7 +8,6 @@ import aiogram.utils.markdown as md
 from PortfolioFilters import BetaPositivePortfolioFilter, IncomeTickerFilter, VolatilityTickerFilter
 from PriceСharts import TickerDynamics, JapaneseCandlesDynamics
 from PortfolioModels import MarkovModel
-from TickerDataParser import DataParser
 from Keyboards import Keyboard, portfolio_buttons, graph_buttons
 
 from available_messages import START_COMMAND, HELP_COMMAND, DESCRIPTION_COMMAND
@@ -168,25 +167,25 @@ async def portfolio_result(message: types.Message, state: FSMContext):
 	try:
 		tickers = message.text.split(',')
 		command = P_COMMAND[message.from_user.id]
-		cost = P_COST[message.from_user.id]
+		cost = int(P_COST[message.from_user.id])
 		for position in range(len(tickers)):
 			ticker = tickers[position].upper()
 			if ticker[:1] == ' ':
 				tickers[position] = ticker[1:]
 		if command == 'Создать обычный портфель':
-			markov_p = MarkovModel(DataParser(tickers, date_start, date_end).parse_tickers(), cost).result()
+			markov_p = MarkovModel(tickers, date_start, date_end, cost).result()
 			await send_text(message, markov_p)
 		if command == 'Создать портфель с бета значением':
 			beta_tickers = BetaPositivePortfolioFilter(tickers, date_start, date_end).filter()
-			markov_p_beta = MarkovModel(DataParser(beta_tickers, date_start, date_end).parse_tickers(), cost).result()
+			markov_p_beta = MarkovModel(beta_tickers, date_start, date_end, cost).result()
 			await send_text(message, markov_p_beta)
 		if command == 'Создать портфель с максимальным доходом':
 			income_tickers = IncomeTickerFilter(tickers, date_start, date_end).filter()
-			markov_p_income = MarkovModel(DataParser(income_tickers, date_start, date_end).parse_tickers(), cost).result()
+			markov_p_income = MarkovModel(income_tickers, date_start, date_end, cost).result()
 			await send_text(message, markov_p_income)
 		if command == 'Создать портфель с минимальной волатильностью':
 			volatility_tickers = VolatilityTickerFilter(tickers, date_start, date_end).filter()
-			markov_p_volatility = MarkovModel(DataParser(volatility_tickers, date_start, date_end).parse_tickers(), cost).result()
+			markov_p_volatility = MarkovModel(volatility_tickers, date_start, date_end, cost).result()
 			await send_text(message, markov_p_volatility)
 		if len(P_COMMAND) > 2000 and len(P_COST) > 2000:
 			delete_dict(P_COMMAND)
