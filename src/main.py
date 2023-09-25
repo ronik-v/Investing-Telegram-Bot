@@ -35,8 +35,12 @@ try:
 	chdir('src/Graphs')
 	print(f'main - {getcwd()}')
 except OSError:
-	print('\033[31m {}'.format('Failed to change directory to Graphs.'))
-	exit(1)
+	try:
+		chdir('Graphs')
+		print(f'main - {getcwd()}')
+	except OSError:
+		print('\033[31m {}'.format('Failed to change directory to Graphs.'))
+		exit(1)
 
 P_COMMAND = {}
 P_COST = {}
