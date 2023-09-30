@@ -1,11 +1,11 @@
 # Investing-Telegram-Bot
-[!License](https://img.shields.io/github/license/ronik-v/Investing-Telegram-Bot)](https://github.com/ronik-v/Investing-Telegram-Bot/blob/main/LICENSE)
-![Telegram] (https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)
-<div>
-    <h3>Used technology</h3>
-    ![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
-    ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?&style=for-the-badge&logo=redis&logoColor=white)
-</div>
+[![License](https://img.shields.io/github/license/ronik-v/Investing-Telegram-Bot)](https://github.com/ronik-v/Investing-Telegram-Bot/blob/main/LICENSE)
+![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)
+
+## Used technology
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?&style=for-the-badge&logo=redis&logoColor=white)
+
 <div class="wrapper">
 <em>The program allows you to create an investment portfolio with maximum profitability and minimum risks, analyze the dynamics of prices for ordinary shares in real time, and keep abreast of financial news.</em><br>
 
