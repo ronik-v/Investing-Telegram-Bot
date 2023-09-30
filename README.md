@@ -1,4 +1,11 @@
 # Investing-Telegram-Bot
+[!License](https://img.shields.io/github/license/ronik-v/Investing-Telegram-Bot)](https://github.com/ronik-v/Investing-Telegram-Bot/blob/main/LICENSE)
+![Telegram] (https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)
+<div>
+    <h3>Used technology</h3>
+    ![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
+    ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?&style=for-the-badge&logo=redis&logoColor=white)
+</div>
 <div class="wrapper">
 <em>The program allows you to create an investment portfolio with maximum profitability and minimum risks, analyze the dynamics of prices for ordinary shares in real time, and keep abreast of financial news.</em><br>
 
@@ -41,7 +48,7 @@
     <img src="images/portfolio.png"/><br>
     <p>2. Creating a graph(Japanese candles): </p>
     <img src="images/graph.png"/><br>
-    <p>2. Creating a graph(Moving averages): </p>
+    <p>3. Creating a graph(Moving averages): </p>
     <img src="images/graph_sma.png"/><br>
 </div>
 
