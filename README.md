@@ -7,7 +7,7 @@
 ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?&style=for-the-badge&logo=redis&logoColor=white)
 
 <div class="wrapper">
-<em>The program allows you to create an investment portfolio with maximum profitability and minimum risks, analyze the dynamics of prices for ordinary shares in real time, and keep abreast of financial news.</em><br>
+<em>The program allows you to create an investment portfolio with maximum profitability and minimum risks, analyze the dynamics of prices for ordinary shares in real time.</em><br>
 
 <h3>What can this bot do?</h3>
 <ul>
@@ -34,12 +34,7 @@
 
 <div>
     <h3>Required to run bot</h3>
-    <ul>
-        <li>Create dir: Windows\Linux: <em>mkdir Investing-Telegram-Bot/src/Graphs</em></li>
-        <li>Install libs: aiogram, matplotlib, numpy, pandas_datareader</li>
-        <li>Add your token in <b>config.py</b></li>
-        <li>Create docker image with <a href="Dockerfile">dockerfile</a></li>
-    </ul>
+    <p>To start the project, read the small <a href="START.md">manual</a>.</p>
 </div>
 
 <div>
