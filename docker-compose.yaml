@@ -1,0 +1,13 @@
+version: ‘3.8’
+
+services:
+   redis:
+     image: redislabs/redismod
+     container_name: redis
+     ports:
+       - '6379:6379'
+   investing_bot:
+        build: .
+        container_name: investing_bot
+        depends_on:
+            - redis
