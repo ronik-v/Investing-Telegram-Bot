@@ -1,7 +1,8 @@
-from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.fsm.state import StatesGroup, State
 
 
 class TickersListForms(StatesGroup):
+    portfolio_type = State()
     portfolio_cost = State()
     tickers = State()
 

@@ -1,34 +1,28 @@
+from uuid import uuid4
+
 import matplotlib.pyplot as plt
-from abc import ABC, abstractmethod
-from TickerDataParser import DataParser
+from io import BytesIO
+from typing import override
+from ticker_data_parser import DataParser
+from abstract import Graph
 
 
-#   Base model for creating graphs
-class Graph(ABC):
-    @abstractmethod
+def generate_random_file_name(extension: str = "") -> str:
+    """Случайное название файла"""
+    extension = extension.replace(".", "")
+    return f"{uuid4().hex}.{extension}" if extension else f"{uuid4().hex}"
+
+
+class TickerDynamics(Graph):
     def __init__(self, ticker, date_start, date_end, user_id):
-        self.ticker = ticker
-        self.date_start = date_start
-        self.date_end = date_end
-        self.user_id = user_id
-
-    @abstractmethod
-    def png_file_path(self) -> str:
-        pass
-
-
-class TickerDynamics(Graph, ABC):
-    def __init__(self, ticker, date_start, date_end, user_id):
-        self.ticker = ticker
-        self.date_start = date_start
-        self.date_end = date_end
-        self.user_id = user_id
+        super().__init__(ticker, date_start, date_end, user_id)
         self.df = DataParser.get_base_df(self.ticker, self.date_start, self.date_end)
         self.df['SMA5'] = self.df['CLOSE'].rolling(5).mean()
         self.df['SMA12'] = self.df['CLOSE'].rolling(12).mean()
         self.df['EWMA'] = self.df['CLOSE'].ewm(com=5).mean()
 
-    def png_file_path(self) -> str:
+    @override
+    def png_file_path(self) -> tuple[bytes, str]:
         fig = plt.figure(figsize=(10, 8))
         plt.plot(self.df['CLOSE'], label=f'Close price {self.ticker}')
         plt.plot(self.df['SMA5'], label='SMA(5)')
@@ -39,19 +33,21 @@ class TickerDynamics(Graph, ABC):
         plt.ylabel('RUB')
         plt.legend()
         plt.grid(True)
-        fig.savefig(f"{self.user_id}_ma.png")
-        return f"{self.user_id}_ma.png"
+
+        img_bytes = BytesIO()
+        fig.savefig(img_bytes, format='png')
+        img_bytes.seek(0)
+        plt.close(fig)
+        return img_bytes.getvalue(), generate_random_file_name("png")
 
 
-class JapaneseCandlesDynamics(Graph, ABC):
+class JapaneseCandlesDynamics(Graph):
     def __init__(self, ticker, date_start, date_end, user_id):
-        self.ticker = ticker
-        self.date_start = date_start
-        self.date_end = date_end
-        self.user_id = user_id
+        super().__init__(ticker, date_start, date_end, user_id)
         self.prices = DataParser.get_base_df(self.ticker, self.date_start, self.date_end)
 
-    def png_file_path(self):
+    @override
+    def png_file_path(self) -> tuple[bytes, str]:
         fig = plt.figure(figsize=(10, 8))
         width = .8
         width2 = .09
@@ -70,5 +66,9 @@ class JapaneseCandlesDynamics(Graph, ABC):
         plt.ylabel('RUB')
         plt.grid(True)
         plt.xticks(rotation=45, ha='right')
-        fig.savefig(f"{self.user_id}_candles.png")
-        return f"{self.user_id}_candles.png"
+
+        img_bytes = BytesIO()
+        fig.savefig(img_bytes, format='png')
+        img_bytes.seek(0)
+        plt.close(fig)
+        return img_bytes.getvalue(), generate_random_file_name("png")

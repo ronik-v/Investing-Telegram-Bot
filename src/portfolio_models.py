@@ -1,5 +1,5 @@
 from pandas import DataFrame
-from TickerDataParser import DataParser
+from ticker_data_parser import DataParser
 import numpy as np
 
 
@@ -32,9 +32,15 @@ class MarkovModel:
             last_prices.append(self.df_close[ticker][len(self.df_close) - 1])
         return last_prices
 
-    def result(self) -> list[str]:
-        iterations = 800
-        portfolio_structure = list()
+    def create_portfolio_df(self, weights):
+        portfolio_df = DataFrame([weights * 100], columns=self.df_close.columns, index=['доли, %']).T
+        portfolio_df['Цена сейчас'] = self.get_last_prices()
+        portfolio_df['Количество акций'] = ((portfolio_df['доли, %'] / 100) * self.portfolio_cost) / portfolio_df['Цена сейчас']
+        portfolio_df['Количество акций'] = portfolio_df['Количество акций'].round(0)
+        return portfolio_df.round(2)[['доли, %', 'Цена сейчас', 'Количество акций']]
+
+    def result(self, iterations=800) -> list[str]:
+        portfolio_structure = []
         risk = np.zeros(iterations)
         doh = np.zeros(iterations)
         portf = np.zeros((iterations, self.tickers_amount))
@@ -51,26 +57,9 @@ class MarkovModel:
         r_mean = np.ones(self.tickers_amount) / self.tickers_amount
         risk_mean = self.risk_of_portfolio(r_mean)
 
-        minimal_risk = DataFrame([portf[min_risk] * 100], columns=self.df_close.columns, index=['доли, %']).T
-        minimal_risk['Цена сейчас'] = self.get_last_prices()
-        minimal_risk['Количество акций'] = ((minimal_risk['доли, %'] / 100) * self.portfolio_cost) / minimal_risk['Цена сейчас']
-        minimal_risk['Количество акций'] = minimal_risk['Количество акций'].round(0)
-        minimal_risk = minimal_risk.round(2)
-        del minimal_risk[minimal_risk.columns[1]]
-
-        maximum_sharpe_ratio = DataFrame([portf[max_sharp_coefficient] * 100], columns=self.df_close.columns, index=['доли, %']).T
-        maximum_sharpe_ratio['Цена сейчас'] = self.get_last_prices()
-        maximum_sharpe_ratio['Количество акций'] = ((maximum_sharpe_ratio['доли, %'] / 100) * self.portfolio_cost) / maximum_sharpe_ratio['Цена сейчас']
-        maximum_sharpe_ratio['Количество акций'] = maximum_sharpe_ratio['Количество акций'].round(0)
-        maximum_sharpe_ratio = maximum_sharpe_ratio.round(2)
-        del maximum_sharpe_ratio[maximum_sharpe_ratio.columns[1]]
-
-        medium_portfolio = DataFrame([r_mean * 100], columns=self.df_close.columns, index=['доли, %']).T
-        medium_portfolio['Цена сейчас'] = self.get_last_prices()
-        medium_portfolio['Количество акций'] = ((medium_portfolio['доли, %'] / 100) * self.portfolio_cost) / medium_portfolio['Цена сейчас']
-        medium_portfolio['Количество акций'] = medium_portfolio['Количество акций'].round(0)
-        medium_portfolio = medium_portfolio.round(2)
-        del medium_portfolio[medium_portfolio.columns[1]]
+        minimal_risk = self.create_portfolio_df(portf[min_risk])
+        maximum_sharpe_ratio = self.create_portfolio_df(portf[max_sharp_coefficient])
+        medium_portfolio = self.create_portfolio_df(r_mean)
 
         portfolio_structure.append('Минимальный риск\n')
         portfolio_structure.append("риск = %1.2f%%" % (float(risk[min_risk]) * 100.))
