@@ -3,8 +3,8 @@ from uuid import uuid4
 import matplotlib.pyplot as plt
 from io import BytesIO
 from typing import override
-from ticker_data_parser import DataParser
-from abstract import Graph
+from src.data.ticker_data_parser import DataParser
+from src.abstract import Graph
 
 
 def generate_random_file_name(extension: str = "") -> str:

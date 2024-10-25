@@ -7,9 +7,9 @@ from aiogram.types import BufferedInputFile
 from aiogram.fsm.storage.memory import MemoryStorage
 from src.core.portfolio_filters import BetaPositivePortfolioFilter, IncomeTickerFilter, VolatilityTickerFilter
 from src.core.portfolio_models import MarkovModel
-from keyboards import Keyboard
-from available_messages import START_COMMAND, HELP_COMMAND, DESCRIPTION_COMMAND
-from forms import TickersListForms
+from src.utils.keyboards import Keyboard
+from src.utils.available_messages import START_COMMAND, HELP_COMMAND, DESCRIPTION_COMMAND
+from src.utils.forms import TickersListForms
 from datetime import datetime, timedelta
 from config import bot_token
 import logging

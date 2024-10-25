@@ -3,9 +3,9 @@ from numpy import std
 from pandas import DataFrame
 from warnings import filterwarnings
 
-from ticker_data_parser import DataParser
+from src.data.ticker_data_parser import DataParser
 
-from abstract import PortfolioFilter
+from src.abstract import PortfolioFilter
 
 filterwarnings('ignore')
 

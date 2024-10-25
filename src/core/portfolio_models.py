@@ -1,5 +1,5 @@
 from pandas import DataFrame
-from ticker_data_parser import DataParser
+from src.data.ticker_data_parser import DataParser
 import numpy as np
 
 
