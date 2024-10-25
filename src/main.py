@@ -5,8 +5,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils import markdown as md
 from aiogram.types import BufferedInputFile
 from aiogram.fsm.storage.memory import MemoryStorage
-from portfolio_filters import BetaPositivePortfolioFilter, IncomeTickerFilter, VolatilityTickerFilter
-from portfolio_models import MarkovModel
+from src.core.portfolio_filters import BetaPositivePortfolioFilter, IncomeTickerFilter, VolatilityTickerFilter
+from src.core.portfolio_models import MarkovModel
 from keyboards import Keyboard
 from available_messages import START_COMMAND, HELP_COMMAND, DESCRIPTION_COMMAND
 from forms import TickersListForms
@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from config import bot_token
 import logging
 from redis import StrictRedis
-from price_charts import TickerDynamics, JapaneseCandlesDynamics
+from src.core.price_charts import TickerDynamics, JapaneseCandlesDynamics
 
 bot = Bot(token=bot_token)
 storage = MemoryStorage()
@@ -46,7 +46,7 @@ G_COMMAND = {}
 
 def current_dates() -> tuple[datetime, datetime]:
     today = datetime.now()
-    end_date = today - timedelta(weeks=12)  # ~3 months earlier
+    end_date = today - timedelta(weeks=26)  # ~6 months earlier
     return today, end_date
 
 
